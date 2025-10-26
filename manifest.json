@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Ekachitta: YouTube Focus Filter",
+  "version": "1.0",
+  "description": "A Chromium extension to filter YouTube content based on user-defined keywords.",
+  
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icons/focus-16.png" 
+  },
+  
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  
+  "content_scripts": [
+    {
+      "matches": ["*://www.youtube.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  
+  "background": {
+    "service_worker": "background.js"
+  }
+}
