@@ -11,6 +11,8 @@ function saveSettings() {
     // FR-06: Active Toggle
     const isFilteringActive = document.getElementById('toggleFilter').checked;
     const disableShorts = document.getElementById('toggleShorts').checked;
+    const disableComments = document.getElementById('toggleComments').checked;
+    const hyperFocus = document.getElementById('toggleHyperFocus').checked;
 
     // FR-05: Whitelist Channels
     const whitelistText = document.getElementById('whitelist').value;
@@ -22,7 +24,9 @@ function saveSettings() {
         keywords: keywords, 
         isActive: isFilteringActive,
         whitelistedChannels: whitelistedChannels,
-        disableShorts: disableShorts
+        disableShorts: disableShorts,
+        disableComments: disableComments,
+        hyperFocus: hyperFocus
     }, () => {
         // Find the active tab and send a message to trigger immediate filtering
         chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
@@ -31,12 +35,15 @@ function saveSettings() {
             }
         });
         updateStatus(isFilteringActive);
+        updateShortsStatus(disableShorts);
+        updateCommentsStatus(disableComments);
+        updateHyperFocus(hyperFocus)
     });
 }
 
 // Function to load and display saved settings
 function loadSettings() {
-    chrome.storage.sync.get(['keywords', 'isActive', 'whitelistedChannels', 'disableShorts'], (data) => {
+    chrome.storage.sync.get(['keywords', 'isActive', 'whitelistedChannels', 'disableShorts', 'disableComments','hyperFocus'], (data) => {
         // Load Keywords (FR-01)
         if (data.keywords) {
             document.getElementById('keywords').value = data.keywords.join('\n');
@@ -51,6 +58,16 @@ function loadSettings() {
         const disableShorts = data.disableShorts !== undefined ? data.disableShorts : false;
         document.getElementById('toggleShorts').checked = disableShorts;
         updateShortsStatus(disableShorts);
+
+        // Load Disable Comments (FR-08)
+        const disableComments = data.disableComments !== undefined ? data.disableComments : false;
+        document.getElementById('toggleComments').checked = disableComments;
+        updateCommentsStatus(disableComments);
+
+        // Hyper Focus (new)
+        const hyperFocus = data.hyperFocus !== undefined ? data.hyperFocus : false;
+        document.getElementById('toggleHyperFocus').checked = hyperFocus;
+        updateHyperFocus(hyperFocus);
 
         // Load Whitelist (FR-05)
         if (data.whitelistedChannels) {
@@ -83,9 +100,38 @@ function updateShortsStatus(disableShorts) {
     }
 }
 
+// Function to update the comments status (FR-08 helper)
+function updateCommentsStatus(disableComments) {
+    const commentsStatusSpan = document.getElementById('commentsstatus');
+
+    if (disableComments) {
+        commentsStatusSpan.textContent = "DISABLED";
+        commentsStatusSpan.style.color = "red";
+    }
+    else {
+        commentsStatusSpan.textContent = "ENABLED";
+        commentsStatusSpan.style.color = "green";
+    }
+}
+
+// Function to update the hyper focus status (new helper)
+function updateHyperFocus(hyperFocus)
+{
+    const hyperFocusSpan = document.getElementById('hyperfocusstatus');
+    if (hyperFocus) {
+        hyperFocusSpan.textContent = "ENABLED";
+        hyperFocusSpan.style.color = "green";
+    } else {
+        hyperFocusSpan.textContent = "DISABLED";
+        hyperFocusSpan.style.color = "red";
+    }
+}
+
 // Event Listeners
 document.addEventListener('DOMContentLoaded', loadSettings);
 document.getElementById('saveKeywordsButton').addEventListener('click', saveSettings);
 document.getElementById('saveWhitelistButton').addEventListener('click', saveSettings);
 document.getElementById('toggleFilter').addEventListener('change', saveSettings);
 document.getElementById('toggleShorts').addEventListener('change', saveSettings);
+document.getElementById('toggleComments').addEventListener('change', saveSettings);
+document.getElementById('toggleHyperFocus').addEventListener('change', saveSettings);

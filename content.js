@@ -15,7 +15,7 @@ const VIDEO_TITLE_SELECTOR_search = '#video-title, yt-formatted-string';
 const VIDEO_TITLE_SELECTOR_watch = 'a>.yt-core-attributed-string';
 
 // Channel Name Selectors (The element text we check for whitelisting - FR-05)
-const CHANNEL_NAME_SELECTOR_Home = 'ytd-channel-name a';
+const CHANNEL_NAME_SELECTOR_Home = 'span.yt-core-attributed-string';
 const CHANNEL_NAME_SELECTOR_search = '.yt-lockup-byline a, ytd-channel-name a';
 const CHANNEL_NAME_SELECTOR_watch = '.yt-core-attributed-string';
 
@@ -144,10 +144,10 @@ function applyFilter(videoElements, keywords, whitelistedChannels, selectors) {
     try {
         videoElements.forEach(video => {
             // 1. FR-05: WHITELIST CHECK
-            const channelElement = video.querySelector(selectors.channel);
-            const channelName = channelElement ? channelElement.textContent.trim().toLowerCase() : '';
-            
-            if (whitelistedChannels.includes(channelName)) {
+            const channelElements = video.querySelectorAll(selectors.channel);
+            const channelNames = Array.from(channelElements).map(el => el.textContent.trim().toLowerCase());
+
+            if (channelNames.some(name => whitelistedChannels.includes(name))) {
                 video.style.display = ''; // Keep visible and skip filtering
                 return; 
             }
@@ -178,15 +178,58 @@ function filterVideos() {
     const selectors = getActiveSelectors(); 
 
 
-    chrome.storage.sync.get(['keywords', 'isActive', 'whitelistedChannels','disableShorts'], (data) => {
+    chrome.storage.sync.get(['keywords', 'isActive', 'whitelistedChannels','disableShorts', 'disableComments','hyperFocus'], (data) => {
         const storedKeywords = data.keywords || [];
         const isActive = data.isActive !== false; 
         const whitelistedChannels = data.whitelistedChannels || [];
-        const disableShorts = data.disableShorts === true;
+        const disableShorts = data.disableShorts !== false;
+        const disableComments = data.disableComments !== false;
+        const hyperFocus = data.hyperFocus !== false;
+
+        // FR-07: Disable Comments Section
+        const commentsSection = document.getElementById('comments');
+        const commentsStatusTag = document.querySelector('ytd-comments');
+        if (disableComments) {
+            if (commentsSection) {
+                commentsSection.style.display = 'none';
+            }
+            if (commentsStatusTag) {
+                commentsStatusTag.style.display = 'none';
+            }
+        }
+        else{
+            if (commentsSection) {
+                commentsSection.style.display = '';
+            }
+            if (commentsStatusTag) {
+                commentsStatusTag.style.display = '';
+            }
+        }
+
+        // FR-07: Shorts Sections
+        const shortsSections = document.querySelectorAll('ytd-rich-shelf-renderer, grid-shelf-view-model, yt-horizontal-list-renderer, ytd-reel-shelf-renderer');
         if (disableShorts) {
-            const shortsSections = document.querySelectorAll('ytd-rich-shelf-renderer, grid-shelf-view-model, yt-horizontal-list-renderer');
             shortsSections.forEach(section => section.style.display = 'none');
         }
+        else
+        {
+            shortsSections.forEach(section => section.style.display = '');
+        }
+
+        const below = document.getElementById('below');
+        const secondary = document.getElementById('secondary');
+        const container = document.getElementById('masthead-container');
+        if (hyperFocus) {
+            if (below) below.style.display = 'none';
+            if (secondary) secondary.style.display = 'none';
+            if (container) container.style.display = 'none';
+        }
+        else {
+            if (below) below.style.display = '';
+            if (secondary) secondary.style.display = '';
+            if (container) container.style.display = '';
+        }
+
 
         // FR-02: Integrate temporary search keyword
         const tempKeywords = getSearchKeywords();
