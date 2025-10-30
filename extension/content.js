@@ -119,7 +119,7 @@ function getSearchKeywords() {
             const urlParams = new URLSearchParams(window.location.search);
             const query = urlParams.get('search_query');
             if (query) {
-                tempKeywords.push(decodeURIComponent(query).trim().toLowerCase());
+                query.split(/\s+/).map((q) => q.toLowerCase().trim()).filter((q) => q.length > 0).forEach((q) => tempKeywords.push(q));
             }
         } catch (e) {
             // Fallback: Get keyword from the search input field
