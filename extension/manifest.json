@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Ekachitta: YouTube Focus Filter",
+  "name": "Ekachitta: Smart Focus Filter",
   "version": "1.0",
   "description": "A Chromium extension to disable comments, shorts, and filter YouTube content based on user-defined keywords & more.",
   
